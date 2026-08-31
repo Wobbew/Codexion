@@ -2,7 +2,15 @@ NAME    = codexion
 CC      = cc
 CFLAGS  = -Wall -Wextra -Werror -pthread
 
-SRCS    = main.c
+SRCS    = main.c \
+	      parsing.c \
+	      errors.c \
+	      setup.c \
+	      dongle.c \
+	      release.c \
+	      dongle_queue.c \
+	      coder.c \
+	      monitor.c
 OBJS    = $(SRCS:.c=.o)
 
 all: $(NAME)
@@ -10,10 +18,11 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
-%.o: %.c
+%.o: %.c codexion.h
 	$(CC) $(CFLAGS) -c $< -o $@
+
 run: $(NAME)
-	./$(NAME) 3 800 200 200 200 3 100 fifo
+	./$(NAME) 2 800 200 200 200 3 100 edf
 
 clean:
 	rm -f $(OBJS)

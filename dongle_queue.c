@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   dongle_queue.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/08/31 13:23:48 by wwiedijk          #+#    #+#             */
+/*   Updated: 2026/08/31 18:30:02 by wwiedijk         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codexion.h"
 
@@ -12,12 +23,6 @@ static void	timed_wait(t_coder *coder, t_dongle *dongle)
 	pthread_cond_timedwait(&coder->cond, &dongle->mutex, &ts);
 }
 
-/*
-** Stops waiting once this coder is first in line, the dongle is
-** available, and its cooldown has elapsed. Also bails out if the
-** simulation has been signalled to stop, so a queued coder never
-** hangs forever past shutdown.
-*/
 void	wait_for_dongle(t_coder *coder, t_dongle *dongle)
 {
 	while (dongle->waiter_count == 0
@@ -34,11 +39,6 @@ void	wait_for_dongle(t_coder *coder, t_dongle *dongle)
 	}
 }
 
-/*
-** Shifts the queue left, stopping one short of the end so we never
-** read waiters[waiter_count], which would be out of bounds once
-** waiter_count reaches its max of 2.
-*/
 void	pops_queue(t_dongle *dongle)
 {
 	int	i;
@@ -56,12 +56,17 @@ int	sort_queue(t_dongle *dongle, t_waiter waiter)
 {
 	int			i;
 	t_waiter	tmp;
-
+	
+	tmp = waiter;
 	i = 0;
+	printf("%ld", dongle->waiters[i + 1].key);
 	dongle->waiters[dongle->waiter_count] = waiter;
-	while (i < dongle->waiter_count)
+
+	while (dongle->waiters[i + 1].key)
 	{
-		if (dongle->waiters[i].key > dongle->waiters[i + 1].key)
+		// printf("\n\nhi\n\n");
+		// printf("\n\n%ld\n\n",dongle->waiters[i].key);
+		if (dongle->waiters[i].key > dongle->waiters[i + 1].key || (dongle->waiters[i].key == dongle->waiters[i + 1].key && dongle->waiters[i].coder_id > dongle->waiters[i + 1].coder_id))
 		{
 			tmp = dongle->waiters[i];
 			dongle->waiters[i] = dongle->waiters[i + 1];

@@ -1,6 +1,6 @@
 NAME    = codexion
 CC      = cc
-CFLAGS  = -Wall -Wextra -Werror -pthread
+CFLAGS  = -Wall -Wextra -Werror -pthread -g
 
 SRCS    = main.c \
 	      parsing.c \
@@ -22,7 +22,7 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 run: $(NAME)
-	./$(NAME) 2 800 200 200 200 3 100 edf
+	./$(NAME) 4 800 200 200 200 3 100 edf
 
 clean:
 	rm -f $(OBJS)

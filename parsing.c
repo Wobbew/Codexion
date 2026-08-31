@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/08/31 13:26:42 by wwiedijk          #+#    #+#             */
+/*   Updated: 2026/08/31 13:59:26 by wwiedijk         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codexion.h"
 
@@ -59,7 +70,6 @@ static bool	fill_params(char **argv, t_params *params)
 bool	params_args(int argc, char **argv, t_params *params)
 {
 	int	i;
-
 	if (argc != 9)
 		return (input_error());
 	i = 1;

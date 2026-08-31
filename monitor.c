@@ -1,10 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   monitor.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/08/31 13:24:14 by wwiedijk          #+#    #+#             */
+/*   Updated: 2026/08/31 13:26:31 by wwiedijk         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codexion.h"
- 
+
 void	wake_all_coders(t_sim *sim)
 {
 	int	i;
- 
+
 	i = 0;
 	while (i < sim->params.num_coders)
 	{
@@ -14,12 +25,12 @@ void	wake_all_coders(t_sim *sim)
 		i++;
 	}
 }
- 
+
 int	compile_count(t_sim *sim)
 {
 	int	total;
 	int	i;
- 
+
 	total = 0;
 	i = 0;
 	while (i < sim->params.num_coders)
@@ -29,7 +40,7 @@ int	compile_count(t_sim *sim)
 	}
 	return (total);
 }
- 
+
 void	exit_simulation(t_sim *sim, bool burned_out, int i)
 {
 	pthread_mutex_lock(&sim->stop_mutex);
@@ -42,19 +53,13 @@ void	exit_simulation(t_sim *sim, bool burned_out, int i)
 	pthread_mutex_unlock(&sim->stop_mutex);
 	wake_all_coders(sim);
 }
- 
-/*
-** A coder burns out only if it has NOT yet reached its required
-** compile count and has missed its deadline. Success (every coder
-** reached the target) is checked separately so the simulation always
-** has a way to stop even when nobody burns out.
-*/
+
 void	monitor_coders(t_sim *sim)
 {
 	long	now;
 	int		i;
 	int		target;
- 
+
 	target = sim->params.num_compiles_required * sim->params.num_coders;
 	if (compile_count(sim) == target)
 		return (exit_simulation(sim, false, 0));
@@ -69,11 +74,11 @@ void	monitor_coders(t_sim *sim)
 		i++;
 	}
 }
- 
+
 void	*monitor_routine(void *arg)
 {
 	t_sim	*sim;
- 
+
 	sim = (t_sim *)arg;
 	while (true)
 	{

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   setup.c                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:27:44 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 13:27:50 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   setup.c                                            :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:27:44 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/02 20:33:08 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ bool	setup_sim(t_sim *sim)
 	sim->start_ms = get_time_ms();
 	pthread_mutex_init(&sim->log_mutex, NULL);
 	pthread_mutex_init(&sim->stop_mutex, NULL);
+	pthread_mutex_init(&sim->table_mutex, NULL);
+	pthread_cond_init(&sim->table_cond, NULL);
 	sim->stopped = false;
 	sim->monitor_started = false;
 	return (true);

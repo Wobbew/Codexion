@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   dongle_queue.c                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:23:48 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 18:30:02 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   dongle_queue.c                                     :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:23:48 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/02 20:23:54 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,26 +54,18 @@ void	pops_queue(t_dongle *dongle)
 
 int	sort_queue(t_dongle *dongle, t_waiter waiter)
 {
-	int			i;
 	t_waiter	tmp;
 	
 	tmp = waiter;
-	i = 0;
-	printf("%ld", dongle->waiters[i + 1].key);
 	dongle->waiters[dongle->waiter_count] = waiter;
 
-	while (dongle->waiters[i + 1].key)
+	if ((dongle->waiter_count > 0 && dongle->waiters[0].key > dongle->waiters[1].key) || (dongle->waiter_count > 0 && dongle->waiters[0].key == dongle->waiters[1].key && (dongle->waiters[0].coder_id + 1) % 2 != 0))
 	{
-		// printf("\n\nhi\n\n");
-		// printf("\n\n%ld\n\n",dongle->waiters[i].key);
-		if (dongle->waiters[i].key > dongle->waiters[i + 1].key || (dongle->waiters[i].key == dongle->waiters[i + 1].key && dongle->waiters[i].coder_id > dongle->waiters[i + 1].coder_id))
-		{
-			tmp = dongle->waiters[i];
-			dongle->waiters[i] = dongle->waiters[i + 1];
-			dongle->waiters[i + 1] = tmp;
-		}
-		i++;
+		tmp = dongle->waiters[0];
+		dongle->waiters[0] = dongle->waiters[1];
+		dongle->waiters[1] = tmp;
 	}
+	
 	dongle->waiter_count++;
 	return (0);
 }

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:23:56 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 13:24:00 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   main.c                                             :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:23:56 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/02 20:33:28 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,8 @@ void	cleanup(t_sim *sim)
 	}
 	pthread_mutex_destroy(&sim->log_mutex);
 	pthread_mutex_destroy(&sim->stop_mutex);
+	pthread_mutex_destroy(&sim->table_mutex);
+	pthread_cond_destroy(&sim->table_cond);
 	free(sim->coders);
 	free(sim->dongles);
 }

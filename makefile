@@ -22,7 +22,7 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 run: $(NAME)
-	./$(NAME) 4 800 200 200 200 3 100 edf
+	./$(NAME) 3 800 200 200 200 3 100 edf
 
 clean:
 	rm -f $(OBJS)

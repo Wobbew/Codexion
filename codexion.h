@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   codexion.h                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:22:55 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 13:22:58 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   codexion.h                                         :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:22:55 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/02 20:32:46 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,9 +78,12 @@ struct s_sim
 	long			start_ms;
 	pthread_mutex_t	log_mutex;
 	pthread_mutex_t	stop_mutex;
+	pthread_mutex_t table_mutex;
+	pthread_cond_t  table_cond;
 	bool			stopped;
 	pthread_t		monitor;
 	bool			monitor_started;
+
 };
 
 /* utils */
@@ -109,6 +112,7 @@ int		sort_queue(t_dongle *dongle, t_waiter waiter);
 int		get_dongle(t_coder *coder, t_dongle *dongle);
 int		take_dongle(t_coder *coder);
 int		release_dongle(t_coder *coder);
+void	release_one(t_dongle *dongle, int cooldown);
 
 /* threads */
 void	*coder_routine(void *arg);

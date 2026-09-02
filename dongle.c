@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   dongle.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:23:21 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 13:23:26 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   dongle.c                                           :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:23:21 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/03 00:44:52 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,46 +15,83 @@
 static long	waiter_key(t_coder *coder)
 {
 	if (coder->sim->params.scheduler == 0)
-		return (get_time_ms());
+		return (coder->last_compile_ms);
 	return (coder->last_compile_ms + coder->sim->params.time_to_burnout);
 }
 
-int	get_dongle(t_coder *coder, t_dongle *dongle)
+static bool	dongle_ready(t_dongle *d, long now)
 {
-	t_waiter	waiter;
-
-	pthread_mutex_lock(&dongle->mutex);
-	if (coder->sim->stopped)
-		return (pthread_mutex_unlock(&dongle->mutex));
-	waiter.cond = &coder->cond;
-	waiter.key = waiter_key(coder);
-	waiter.coder_id = coder->id;
-	sort_queue(dongle, waiter);
-	wait_for_dongle(coder, dongle);
-	if (coder->sim->stopped)
-		return (pthread_mutex_unlock(&dongle->mutex));
-	pops_queue(dongle);
-	dongle->available = 0;
-	log_state(coder->sim, coder->id, "has taken a dongle");
-	return (pthread_mutex_unlock(&dongle->mutex));
+	return (d->available && now >= d->available_at);
 }
 
-static void	release_first_after_abort(t_dongle *first)
+static bool	is_at_head(t_dongle *d, t_coder *coder)
 {
-	pthread_mutex_lock(&first->mutex);
-	first->available = true;
-	first->available_at = get_time_ms();
-	if (first->waiter_count > 0)
-		pthread_cond_broadcast(first->waiters[0].cond);
-	pthread_mutex_unlock(&first->mutex);
+	return (d->waiter_count > 0 && d->waiters[0].coder_id == coder->id);
+}
+
+static void	register_interest(t_coder *coder, t_dongle *first, t_dongle *second)
+{
+	t_waiter	w;
+
+	w.cond = &coder->cond;
+	w.key = waiter_key(coder);
+	w.coder_id = coder->id;
+	sort_queue(first, w);
+	if (second != first)
+		sort_queue(second, w);
+}
+
+static void	unregister_interest(t_dongle *dongle, int coder_id)
+{
+	int	i;
+
+	i = 0;
+	while (i < dongle->waiter_count && dongle->waiters[i].coder_id != coder_id)
+		i++;
+	while (i < dongle->waiter_count - 1)
+	{
+		dongle->waiters[i] = dongle->waiters[i + 1];
+		i++;
+	}
+	if (i < dongle->waiter_count)
+		dongle->waiter_count--;
+}
+
+static void	epoch_ms_to_ts(long epoch_ms, struct timespec *ts)
+{
+	ts->tv_sec = epoch_ms / 1000;
+	ts->tv_nsec = (epoch_ms % 1000) * 1000000L;
+}
+
+static void	table_wait(t_sim *sim, t_dongle *first, t_dongle *second, long now)
+{
+	struct timespec	ts;
+	long			until;
+
+	until = -1;
+	if (first->available && first->available_at > now)
+		until = first->available_at;
+	if (second->available && second->available_at > now
+		&& (until == -1 || second->available_at < until))
+		until = second->available_at;
+	if (until == -1)
+		pthread_cond_wait(&sim->table_cond, &sim->table_mutex);
+	else
+	{
+		epoch_ms_to_ts(until, &ts);
+		pthread_cond_timedwait(&sim->table_cond, &sim->table_mutex, &ts);
+	}
 }
 
 int	take_dongle(t_coder *coder)
 {
 	t_dongle	*first;
 	t_dongle	*second;
+	t_sim		*sim;
+	long		now;
 
-	if (coder->id == coder->sim->params.num_coders)
+	sim = coder->sim;
+	if (coder->id == sim->params.num_coders)
 	{
 		first = coder->dongle_right;
 		second = coder->dongle_left;
@@ -64,14 +101,27 @@ int	take_dongle(t_coder *coder)
 		first = coder->dongle_left;
 		second = coder->dongle_right;
 	}
-	get_dongle(coder, first);
-	if (coder->sim->stopped)
-		return (-1);
-	get_dongle(coder, second);
-	if (coder->sim->stopped)
+	pthread_mutex_lock(&sim->table_mutex);
+	register_interest(coder, first, second);
+	now = get_time_ms();
+	while (!sim->stopped && !(dongle_ready(first, now) && dongle_ready(second, now)
+			&& is_at_head(first, coder) && is_at_head(second, coder)))
 	{
-		release_first_after_abort(first);
+		table_wait(sim, first, second, now);
+		now = get_time_ms();
+	}
+	unregister_interest(first, coder->id);
+	unregister_interest(second, coder->id);
+	if (sim->stopped)
+	{
+		pthread_mutex_unlock(&sim->table_mutex);
 		return (-1);
 	}
-	return (0);
+	first->available = false;
+	second->available = false;
+	pthread_mutex_unlock(&sim->table_mutex);
+	log_state(sim, coder->id, "has taken a dongle");
+	log_state(sim, coder->id, "has taken a dongle");
+	return (0);./$(NAME)
 }
+

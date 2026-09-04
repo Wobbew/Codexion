@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   monitor.c                                          :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:24:14 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 13:26:31 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   monitor.c                                          :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:24:14 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/04 17:42:42 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,12 +44,15 @@ int	compile_count(t_sim *sim)
 void	exit_simulation(t_sim *sim, bool burned_out, int i)
 {
 	pthread_mutex_lock(&sim->stop_mutex);
+	pthread_mutex_lock(&sim->table_mutex);
 	if (!sim->stopped)
 	{
 		sim->stopped = true;
 		if (burned_out)
 			log_state(sim, sim->coders[i].id, "burned out");
 	}
+	pthread_cond_broadcast(&sim->table_cond);
+	pthread_mutex_unlock(&sim->table_mutex);
 	pthread_mutex_unlock(&sim->stop_mutex);
 	wake_all_coders(sim);
 }

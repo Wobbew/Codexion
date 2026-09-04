@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   dongle.c                                           :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:21 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/03 00:44:52 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/04 18:25:10 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,6 +101,16 @@ int	take_dongle(t_coder *coder)
 		first = coder->dongle_left;
 		second = coder->dongle_right;
 	}
+
+	if (first == second)
+	{
+		pthread_mutex_lock(&sim->table_mutex);
+		while (!sim->stopped)
+			pthread_cond_wait(&sim->table_cond, &sim->table_mutex);
+		pthread_mutex_unlock(&sim->table_mutex);
+		return (-1);
+	}
+
 	pthread_mutex_lock(&sim->table_mutex);
 	register_interest(coder, first, second);
 	now = get_time_ms();
@@ -116,12 +126,11 @@ int	take_dongle(t_coder *coder)
 	{
 		pthread_mutex_unlock(&sim->table_mutex);
 		return (-1);
-	}
+	} 
 	first->available = false;
 	second->available = false;
 	pthread_mutex_unlock(&sim->table_mutex);
 	log_state(sim, coder->id, "has taken a dongle");
 	log_state(sim, coder->id, "has taken a dongle");
-	return (0);./$(NAME)
+	return (0);
 }
-

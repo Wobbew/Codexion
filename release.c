@@ -6,7 +6,7 @@
 /*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:27:38 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/02 20:34:14 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/08 22:56:54 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,4 +27,14 @@ int	release_dongle(t_coder *coder)
 	pthread_cond_broadcast(&sim->table_cond);
 	pthread_mutex_unlock(&sim->table_mutex);
 	return (0);
+}
+
+bool	is_stopped(t_sim *sim)
+{
+	bool	s;
+
+	pthread_mutex_lock(&sim->stop_mutex);
+	s = sim->stopped;
+	pthread_mutex_unlock(&sim->stop_mutex);
+	return (s);
 }

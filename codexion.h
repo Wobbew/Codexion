@@ -6,7 +6,7 @@
 /*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:22:55 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/02 20:32:46 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/08 22:57:49 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,5 +124,6 @@ void	wake_all_coders(t_sim *sim);
 int		compile_count(t_sim *sim);
 void	exit_simulation(t_sim *sim, bool burned_out, int i);
 void	monitor_coders(t_sim *sim);
+bool	is_stopped(t_sim *sim);
 
 #endif

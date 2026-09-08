@@ -6,7 +6,7 @@
 /*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:48 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/02 20:23:54 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/09 00:26:19 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ void	pops_queue(t_dongle *dongle)
 	}
 	dongle->waiter_count--;
 }
-
+// sorts the waiting queue based on the waiter's key
 int	sort_queue(t_dongle *dongle, t_waiter waiter)
 {
 	t_waiter	tmp;

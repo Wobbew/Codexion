@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   monitor.c                                          :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:24:14 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/04 17:42:42 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/09/08 22:57:26 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void	monitor_coders(t_sim *sim)
 	int		target;
 
 	target = sim->params.num_compiles_required * sim->params.num_coders;
-	if (compile_count(sim) == target)
+	if (compile_count(sim) >= target)
 		return (exit_simulation(sim, false, 0));
 	now = get_time_ms();
 	i = 0;

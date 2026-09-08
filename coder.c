@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   coder.c                                            :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:21:00 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/04 17:44:50 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/09/08 23:00:47 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,9 +43,9 @@ static bool	do_debug_refactor(t_coder *coder)
 {
 	log_state(coder->sim, coder->id, "is debugging");
 	usleep(coder->sim->params.time_to_debug * 1000);
-	log_state(coder->sim, coder->id, "is refactoring");
-	if (coder->sim->stopped)
+	if (is_stopped(coder->sim))
 		return (false);
+	log_state(coder->sim, coder->id, "is refactoring");
 	usleep(coder->sim->params.time_to_refactor * 1000);
 	return (true);
 }

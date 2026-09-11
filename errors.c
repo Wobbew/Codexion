@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   errors.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:23:32 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 13:50:36 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   errors.c                                           :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:23:32 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/11 15:44:09 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
+//if not all arguments are provided or too many arguments are provided
 bool	input_error(void)
 {
 	fprintf(stderr, "Usage: codexion <num_coders> <time_to_burnout> ");

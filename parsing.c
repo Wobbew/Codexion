@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   parsing.c                                          :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: wwiedijk <wwiedijk@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/31 13:26:42 by wwiedijk          #+#    #+#             */
-/*   Updated: 2026/08/31 13:59:26 by wwiedijk         ###   ########.fr       */
+/*                                                        ::::::::            */
+/*   parsing.c                                          :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2026/08/31 13:26:42 by wwiedijk      #+#    #+#                 */
+/*   Updated: 2026/09/11 15:46:12 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
+//checks if a string is a valid integer
 int	ft_isnumeric(char *s)
 {
 	int	i;
@@ -48,7 +48,7 @@ bool	test_args(t_params *params)
 		return (input_error_int());
 	return (true);
 }
-
+//fills the params struct with the provided arguments
 static bool	fill_params(char **argv, t_params *params)
 {
 	params->num_coders = atoi(argv[1]);
@@ -66,7 +66,7 @@ static bool	fill_params(char **argv, t_params *params)
 		return (input_error_schedul());
 	return (true);
 }
-
+//takes all arguments and fills the params struct
 bool	params_args(int argc, char **argv, t_params *params)
 {
 	int	i;

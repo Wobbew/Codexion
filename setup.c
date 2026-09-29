@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   setup.c                                            :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:27:44 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/11 15:53:55 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/29 14:38:54 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,10 +77,10 @@ bool	setup_dongles(t_sim *sim)
 	}
 	return (true);
 }
+
 //make everything ready for execution
 bool	setup(t_sim *sim)
 {
-	
 	if (setup_sim(sim) != true)
 		return (false);
 	if (setup_dongles(sim) != true)

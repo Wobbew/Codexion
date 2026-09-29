@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   release.c                                          :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:27:38 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/08 22:56:54 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/29 14:36:24 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 

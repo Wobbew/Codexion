@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   codexion.h                                         :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:22:55 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/08 22:57:49 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/29 14:38:28 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,8 +78,8 @@ struct s_sim
 	long			start_ms;
 	pthread_mutex_t	log_mutex;
 	pthread_mutex_t	stop_mutex;
-	pthread_mutex_t table_mutex;
-	pthread_cond_t  table_cond;
+	pthread_mutex_t	table_mutex;
+	pthread_cond_t	table_cond;
 	bool			stopped;
 	pthread_t		monitor;
 	bool			monitor_started;

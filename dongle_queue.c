@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   dongle_queue.c                                     :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:48 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/11 16:03:41 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/09/29 14:40:44 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,21 +51,24 @@ void	pops_queue(t_dongle *dongle)
 	}
 	dongle->waiter_count--;
 }
+
 // sorts the waiting queue based on the waiter's key
 int	sort_queue(t_dongle *dongle, t_waiter waiter)
 {
 	t_waiter	tmp;
-	
+
 	tmp = waiter;
 	dongle->waiters[dongle->waiter_count] = waiter;
-
-	if ((dongle->waiter_count > 0 && dongle->waiters[0].key > dongle->waiters[1].key) || (dongle->waiter_count > 0 && dongle->waiters[0].key == dongle->waiters[1].key && (dongle->waiters[0].coder_id + 1) % 2 != 0))
+	if ((dongle->waiter_count > 0
+			&& dongle->waiters[0].key > dongle->waiters[1].key)
+		|| (dongle->waiter_count > 0 && dongle->waiters[0].key
+			== dongle->waiters[1].key
+			&& dongle->waiters[0].coder_id < dongle->waiters[1].coder_id))
 	{
 		tmp = dongle->waiters[0];
 		dongle->waiters[0] = dongle->waiters[1];
 		dongle->waiters[1] = tmp;
 	}
-	
 	dongle->waiter_count++;
 	return (0);
 }

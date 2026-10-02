@@ -6,7 +6,7 @@
 /*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:48 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/29 14:40:44 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/10/02 14:52:39 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,18 @@
 
 static void	timed_wait(t_coder *coder, t_dongle *dongle)
 {
+	struct timeval	tv;
 	struct timespec	ts;
 	long			remaining_ms;
+	long			ns;
 
 	remaining_ms = dongle->available_at - get_time_ms();
-	ts.tv_sec = remaining_ms / 1000;
-	ts.tv_nsec = (remaining_ms % 1000) * 1000000L;
+	if (remaining_ms <= 0)
+		return ;
+	gettimeofday(&tv, NULL);
+	ns = tv.tv_usec * 1000L + (remaining_ms % 1000) * 1000000L;
+	ts.tv_sec = tv.tv_sec + remaining_ms / 1000 + ns / 1000000000L;
+	ts.tv_nsec = ns % 1000000000L;
 	pthread_cond_timedwait(&coder->cond, &dongle->mutex, &ts);
 }
 
@@ -59,11 +65,7 @@ int	sort_queue(t_dongle *dongle, t_waiter waiter)
 
 	tmp = waiter;
 	dongle->waiters[dongle->waiter_count] = waiter;
-	if ((dongle->waiter_count > 0
-			&& dongle->waiters[0].key > dongle->waiters[1].key)
-		|| (dongle->waiter_count > 0 && dongle->waiters[0].key
-			== dongle->waiters[1].key
-			&& dongle->waiters[0].coder_id < dongle->waiters[1].coder_id))
+	if ((dongle->waiter_count > 0 && dongle->waiters[0].key > dongle->waiters[1].key) || (dongle->waiter_count > 0 && dongle->waiters[0].key == dongle->waiters[1].key && (dongle->waiters[0].coder_id > dongle->waiters[1].coder_id)))
 	{
 		tmp = dongle->waiters[0];
 		dongle->waiters[0] = dongle->waiters[1];

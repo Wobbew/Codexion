@@ -6,7 +6,7 @@
 /*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:48 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/02 14:52:39 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/10/02 16:54:22 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ int	sort_queue(t_dongle *dongle, t_waiter waiter)
 
 	tmp = waiter;
 	dongle->waiters[dongle->waiter_count] = waiter;
-	if ((dongle->waiter_count > 0 && dongle->waiters[0].key > dongle->waiters[1].key) || (dongle->waiter_count > 0 && dongle->waiters[0].key == dongle->waiters[1].key && (dongle->waiters[0].coder_id > dongle->waiters[1].coder_id)))
+	if ((dongle->waiter_count > 0 && dongle->waiters[0].key > dongle->waiters[1].key) || (dongle->waiter_count > 0 && dongle->waiters[0].key == dongle->waiters[1].key && (dongle->waiters[0].coder_id < dongle->waiters[1].coder_id)))
 	{
 		tmp = dongle->waiters[0];
 		dongle->waiters[0] = dongle->waiters[1];

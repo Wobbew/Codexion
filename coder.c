@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   coder.c                                            :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
+/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:21:00 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/08 23:00:47 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/10/02 17:01:22 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,8 @@ void	*coder_routine(void *arg)
 	t_coder	*coder;
 
 	coder = (t_coder *)arg;
+	if (coder->id % 2 == 0)
+		usleep(coder->sim->params.time_to_compile * 1000 / 2);
 	while (coder->sim->stopped == false)
 	{
 		if (do_compile(coder) == false)

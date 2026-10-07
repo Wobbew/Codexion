@@ -6,7 +6,7 @@
 /*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:48 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/02 16:54:22 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/10/07 18:50:26 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,8 @@ static void	timed_wait(t_coder *coder, t_dongle *dongle)
 
 void	wait_for_dongle(t_coder *coder, t_dongle *dongle)
 {
-	while (dongle->waiter_count == 0
-		|| dongle->waiters[0].cond != &coder->cond
-		|| !dongle->available
-		|| get_time_ms() < dongle->available_at)
+	while (dongle->waiter_count == 0 || dongle->waiters[0].cond != &coder->cond
+		|| !dongle->available || get_time_ms() < dongle->available_at)
 	{
 		if (coder->sim->stopped)
 			return ;
@@ -65,12 +63,36 @@ int	sort_queue(t_dongle *dongle, t_waiter waiter)
 
 	tmp = waiter;
 	dongle->waiters[dongle->waiter_count] = waiter;
-	if ((dongle->waiter_count > 0 && dongle->waiters[0].key > dongle->waiters[1].key) || (dongle->waiter_count > 0 && dongle->waiters[0].key == dongle->waiters[1].key && (dongle->waiters[0].coder_id < dongle->waiters[1].coder_id)))
+	if ((dongle->waiter_count > 0
+			&& dongle->waiters[0].key > dongle->waiters[1].key)
+		|| (dongle->waiter_count > 0
+			&& dongle->waiters[0].key == dongle->waiters[1].key
+			&& (dongle->waiters[0].coder_id < dongle->waiters[1].coder_id)))
 	{
 		tmp = dongle->waiters[0];
 		dongle->waiters[0] = dongle->waiters[1];
 		dongle->waiters[1] = tmp;
 	}
 	dongle->waiter_count++;
+	return (0);
+}
+
+static int	wait_for_dongles(t_coder *coder, t_dongle *first, t_dongle *second)
+{
+	t_sim	*sim;
+	long	now;
+
+	sim = coder->sim;
+	register_interest(coder, first, second);
+	now = get_time_ms();
+	while (!is_stopped(sim) && !dongles_ready(first, second, coder))
+	{
+		table_wait(sim, first, second, now);
+		now = get_time_ms();
+	}
+	unregister_interest(first, coder->id);
+	unregister_interest(second, coder->id);
+	if (is_stopped(sim))
+		return (-1);
 	return (0);
 }

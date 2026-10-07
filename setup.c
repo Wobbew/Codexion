@@ -6,14 +6,23 @@
 /*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:27:44 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/29 14:38:54 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/10/07 18:52:02 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-//make the simulation ready for execution
-//mallocs all things
-//and initializing mutexes and conditions
+
+// turns milliseconds to timespec
+// i need timespec for pthread_cond_timedwait
+void	ms_to_ts(long ms, struct timespec *ts)
+{
+	ts->tv_sec = ms / 1000;
+	ts->tv_nsec = (ms % 1000) * 1000000L;
+}
+
+// make the simulation ready for execution
+// mallocs all things
+// and initializing mutexes and conditions
 bool	setup_sim(t_sim *sim)
 {
 	sim->coders = malloc(sizeof(t_coder) * sim->params.num_coders);
@@ -46,12 +55,12 @@ bool	setup_coders(t_sim *sim)
 		sim->coders[i].compile_count = 0;
 		sim->coders[i].last_compile_ms = sim->start_ms;
 		sim->coders[i].dongle_right = &sim->dongles[i];
-		sim->coders[i].dongle_left
-			= &sim->dongles[(i + 1) % sim->params.num_coders];
+		sim->coders[i].dongle_left = &sim->dongles[(i + 1)
+			% sim->params.num_coders];
 		sim->coders[i].sim = sim;
 		pthread_cond_init(&sim->coders[i].cond, NULL);
-		if (pthread_create(&sim->coders[i].thread, NULL,
-				coder_routine, &sim->coders[i]) != 0)
+		if (pthread_create(&sim->coders[i].thread, NULL, coder_routine,
+				&sim->coders[i]) != 0)
 			return (false);
 		i++;
 	}
@@ -78,7 +87,7 @@ bool	setup_dongles(t_sim *sim)
 	return (true);
 }
 
-//make everything ready for execution
+// make everything ready for execution
 bool	setup(t_sim *sim)
 {
 	if (setup_sim(sim) != true)

@@ -10,7 +10,10 @@ SRCS    = main.c \
 	      release.c \
 	      dongle_queue.c \
 	      coder.c \
-	      monitor.c
+	      monitor.c\
+		  heap.c \
+		  heap_move.c \
+		  dongle_helper.c
 OBJS    = $(SRCS:.c=.o)
 
 all: $(NAME)

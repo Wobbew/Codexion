@@ -6,7 +6,7 @@
 /*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:22:55 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/29 14:38:28 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/10/08 17:16:40 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,6 @@ typedef struct s_params
 typedef struct s_waiter
 {
 	pthread_cond_t	*cond;
-	bool			active;
 	long			key;
 	int				coder_id;
 }	t_waiter;
@@ -83,12 +82,12 @@ struct s_sim
 	bool			stopped;
 	pthread_t		monitor;
 	bool			monitor_started;
-
 };
 
 /* utils */
 long	get_time_ms(void);
 void	log_state(t_sim *sim, int coder_id, const char *msg);
+void	ms_to_ts(long ms, struct timespec *ts);
 
 /* parsing */
 int		ft_isnumeric(char *s);
@@ -105,14 +104,24 @@ bool	setup_dongles(t_sim *sim);
 bool	setup_coders(t_sim *sim);
 void	cleanup(t_sim *sim);
 
+/* heap (one small min-heap of waiters per dongle) */
+bool	waiter_less(t_waiter *a, t_waiter *b);
+void	waiter_swap(t_waiter *a, t_waiter *b);
+void	sift_up(t_dongle *d, int i);
+void	sift_down(t_dongle *d, int i);
+void	heap_push(t_dongle *d, t_waiter w);
+void	heap_remove(t_dongle *d, int i);
+
 /* dongles */
-void	wait_for_dongle(t_coder *coder, t_dongle *dongle);
-void	pops_queue(t_dongle *dongle);
-int		sort_queue(t_dongle *dongle, t_waiter waiter);
-int		get_dongle(t_coder *coder, t_dongle *dongle);
+bool	dongles_ready(t_dongle *first, t_dongle *second, t_coder *coder);
 int		take_dongle(t_coder *coder);
 int		release_dongle(t_coder *coder);
-void	release_one(t_dongle *dongle, int cooldown);
+int		wait_for_dongles(t_coder *coder, t_dongle *first, t_dongle *second);
+void	table_wait(t_sim *sim, t_dongle *first, t_dongle *second, long now);
+bool	dongle_ready(t_dongle *d, long now);
+bool	is_at_head(t_dongle *d, t_coder *coder);
+void	register_interest(t_coder *coder, t_dongle *first, t_dongle *second);
+void	unregister_interest(t_dongle *dongle, int coder_id);
 
 /* threads */
 void	*coder_routine(void *arg);

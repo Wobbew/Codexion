@@ -6,7 +6,7 @@
 /*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:48 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/07 18:50:26 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/10/08 17:13:24 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ int	sort_queue(t_dongle *dongle, t_waiter waiter)
 	return (0);
 }
 
-static int	wait_for_dongles(t_coder *coder, t_dongle *first, t_dongle *second)
+int	wait_for_dongles(t_coder *coder, t_dongle *first, t_dongle *second)
 {
 	t_sim	*sim;
 	long	now;

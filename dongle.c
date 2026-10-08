@@ -6,7 +6,7 @@
 /*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:21 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/07 18:48:33 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/10/08 17:12:51 by wwiedijk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 // look if we know how long to wait
 // if we do, wait for that long whit pthread_cond_timedwait
-static void	table_wait(t_sim *sim, t_dongle *first, t_dongle *second, long now)
+void	table_wait(t_sim *sim, t_dongle *first, t_dongle *second, long now)
 {
 	struct timespec	ts;
 	long			until;
@@ -67,7 +67,7 @@ static int	handle_same_dongle(t_coder *coder, t_dongle *dongle)
 
 // checks if both dongles are ready for use
 // and the coders at the head of their respective queues
-static bool	dongles_ready(t_dongle *first, t_dongle *second, t_coder *coder)
+bool	dongles_ready(t_dongle *first, t_dongle *second, t_coder *coder)
 {
 	return (dongle_ready(first, get_time_ms()) && dongle_ready(second,
 			get_time_ms()) && is_at_head(first, coder) && is_at_head(second,

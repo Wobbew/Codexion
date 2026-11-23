@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   parsing.c                                          :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:26:42 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/09/29 14:37:21 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/09/11 15:46:12 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,6 @@ bool	test_args(t_params *params)
 		return (input_error_int());
 	return (true);
 }
-
 //fills the params struct with the provided arguments
 static bool	fill_params(char **argv, t_params *params)
 {
@@ -67,12 +66,10 @@ static bool	fill_params(char **argv, t_params *params)
 		return (input_error_schedul());
 	return (true);
 }
-
 //takes all arguments and fills the params struct
 bool	params_args(int argc, char **argv, t_params *params)
 {
 	int	i;
-
 	if (argc != 9)
 		return (input_error());
 	i = 1;

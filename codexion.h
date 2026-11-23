@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   codexion.h                                         :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:22:55 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/08 17:16:40 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/11/23 23:31:21 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,16 +65,22 @@ typedef struct s_coder
 }	t_coder;
 
 /*
-** monitor_started lets join_threads know whether `monitor` was ever
-** pthread_create'd, since joining an unstarted pthread_t is
-** undefined behavior.
+** Locking rules (lock order: table -> log -> stop, never the reverse):
+** - table_mutex protects dongle state, the waiting heaps, next_ticket,
+**   and every coder's last_compile_ms and compile_count.
+** - log_mutex serializes output.
+** - stop_mutex protects `stopped`.
+** monitor_started and started let join_threads know which threads were
+** really created, since joining an unstarted pthread_t is undefined.
 */
 struct s_sim
 {
 	t_params		params;
 	t_coder			*coders;
 	t_dongle		*dongles;
+	t_waiter		*waiter_pool;
 	long			start_ms;
+	long			next_ticket;
 	pthread_mutex_t	log_mutex;
 	pthread_mutex_t	stop_mutex;
 	pthread_mutex_t	table_mutex;
@@ -82,6 +88,7 @@ struct s_sim
 	bool			stopped;
 	pthread_t		monitor;
 	bool			monitor_started;
+	int				started;
 };
 
 /* utils */
@@ -100,8 +107,8 @@ bool	params_args(int argc, char **argv, t_params *params);
 /* init */
 bool	setup(t_sim *sim);
 bool	setup_sim(t_sim *sim);
-bool	setup_dongles(t_sim *sim);
-bool	setup_coders(t_sim *sim);
+void	setup_dongles(t_sim *sim);
+void	setup_coders(t_sim *sim);
 void	cleanup(t_sim *sim);
 
 /* heap (one small min-heap of waiters per dongle) */
@@ -130,7 +137,6 @@ void	join_threads(t_sim *sim);
 
 /* monitor */
 void	wake_all_coders(t_sim *sim);
-int		compile_count(t_sim *sim);
 void	exit_simulation(t_sim *sim, bool burned_out, int i);
 void	monitor_coders(t_sim *sim);
 bool	is_stopped(t_sim *sim);

@@ -19,15 +19,15 @@ The goal is to share the dongles fairly and without deadlock so that nobody burn
 
 | File | Responsibility |
 |---|---|
-| `main.c` | Entry point, thread joining, cleanup |
+| `main.c` | Entry point, thread creation (with failure handling), joining, cleanup |
 | `parsing.c` / `errors.c` | Argument validation and error messages |
-| `setup.c` | Allocation and initialisation of coders, dongles, mutexes and conditions |
+| `setup.c` | Allocation and initialisation of coders, dongles, mutexes and conditions (no threads yet) |
 | `coder.c` | Coder thread routine (compile → debug → refactor), time helper, logging |
 | `dongle.c` | Dongle acquisition, ordering of dongles, readiness checks, single-coder case |
-| `dongle_helper.c` | Scheduler key, registering/unregistering a coder in the dongle queues |
+| `dongle_helper.c` | Scheduler key (arrival ticket / deadline), registering/unregistering a coder in the dongle queues |
 | `dongle_queue.c` | The wait loop that blocks a coder until both dongles can be taken |
 | `heap.c` | Min-heap used as the waiting queue of each dongle |
-| `release.c` | Dongle release with cooldown, thread-safe read of the stop flag |
+| `release.c` | Dongle release with cooldown, compile counter update, thread-safe read of the stop flag |
 | `monitor.c` | Monitor thread: burnout and completion detection, simulation shutdown |
 
 ## Instructions
@@ -96,14 +96,14 @@ With one coder there is only one dongle, so left and right are the same object. 
 
 ### Starvation prevention and scheduling (heap)
 
-Every dongle owns a small **binary min-heap** of waiters (`heap.c`), implemented with `sift_up` / `sift_down` on an array. At most two coders can ever queue on the same dongle (its two neighbours), so each heap has a capacity of 2.
+Every dongle owns a small **binary min-heap** of waiters (`heap.c`), implemented with `sift_up` / `sift_down` on an array. At most two coders can ever queue on the same dongle (its two neighbours), so each heap has a capacity of 2 (all heaps are slices of one `waiter_pool` allocation).
 
 A waiter is ordered by a **key**, then by coder id as a deterministic tie-break:
 
-- `fifo`: key = the coder's `last_compile_ms`
+- `fifo`: key = an **arrival ticket**, a counter taken from `sim->next_ticket` (incremented under `table_mutex`) each time a coder registers a request. The smallest ticket is the oldest request, so this is real arrival order with no ties.
 - `edf`: key = `last_compile_ms + time_to_burnout` (the burnout deadline)
 
-The root of the heap is the coder who is served first. A coder can only take the dongles when they are the root of **both** of their dongles' heaps, so a coder with an earlier key cannot be overtaken by a neighbour. When a coder is done waiting, they remove themselves from both heaps (`heap_remove`).
+The root of the heap is the coder who is served first. The ticket is computed once per request and the same value is pushed into both of the coder's heaps, so both queues always agree. A coder can only take the dongles when they are the root of **both** of their dongles' heaps, so a coder with an earlier key cannot be overtaken by a neighbour. When a coder is done waiting, they remove themselves from both heaps (`heap_remove`).
 
 ### Dongle cooldown
 
@@ -111,15 +111,15 @@ When a dongle is released, it is marked `available = true` with `available_at = 
 
 ### Precise burnout detection
 
-A dedicated monitor thread loops every 1 ms. For each coder that has not yet reached the required number of compiles, it checks `now >= last_compile_ms + time_to_burnout`. On detection it calls `exit_simulation`, which sets the stop flag and prints `burned out` immediately, well within the 10 ms requirement. The monitor also checks whether the total number of compiles has reached `number_of_compiles_required * number_of_coders`, which ends the simulation successfully.
+A dedicated monitor thread loops every 1 ms. For each coder that has not yet reached the required number of compiles, it checks `now >= last_compile_ms + time_to_burnout`. On detection it calls `exit_simulation`, which sets the stop flag and prints `burned out` immediately, well within the 10 ms requirement. The monitor reads `compile_count` and `last_compile_ms` under `table_mutex`, and releases it before calling `exit_simulation`. The monitor also checks whether the total number of compiles has reached `number_of_compiles_required * number_of_coders`, which ends the simulation successfully.
 
 ### Clean shutdown
 
-`exit_simulation` sets the stop flag, broadcasts on `table_cond` and on every coder's own condition variable, so any thread blocked while waiting for dongles wakes up, sees the stop flag and exits. `main` then joins all threads and frees all memory (coders, dongles and every dongle's heap array), and destroys all mutexes and condition variables.
+`exit_simulation` sets the stop flag, then broadcasts on `table_cond` and on every coder's own condition variable, so any thread blocked while waiting for dongles wakes up, sees the stop flag and exits. `main` then joins all threads and frees all memory (coders, dongles and the waiter pool), and destroys all mutexes and condition variables. If a `pthread_create` fails, `main` uses the same shutdown path, joins only the threads that were created (`sim->started`), and cleans up.
 
 ### Log serialization
 
-Every message goes through `log_state`, which holds `log_mutex` around a single `printf`. Lines can therefore never be interleaved. The `burned out` message is printed in the same critical section that sets the stop flag, and only if the flag was not already set, so it is printed at most once.
+Every message goes through `log_state`, which holds `log_mutex` around a single `printf`. Lines can therefore never be interleaved. `log_state` also checks the stop flag under `log_mutex`, so nothing is printed after the simulation has stopped. The `burned out` message is printed by `exit_simulation` in the same critical section (`log_mutex` + `stop_mutex`) that sets the stop flag, and only if the flag was not already set, so it is printed at most once and is always the last line.
 
 ## Thread synchronization mechanisms
 
@@ -128,8 +128,8 @@ Every message goes through `log_state`, which holds `log_mutex` around a single 
 | one `pthread_t` per coder | Each coder runs `coder_routine` |
 | `pthread_t monitor` | Burnout and completion detection |
 | `log_mutex` (`pthread_mutex_t`) | Serializes all output to `stdout` |
-| `stop_mutex` (`pthread_mutex_t`) | Protects the `stopped` flag (read via `is_stopped`, written in `exit_simulation`) |
-| `table_mutex` (`pthread_mutex_t`) | Protects the shared dongle state: `available`, `available_at` and the waiting heaps |
+| `stop_mutex` (`pthread_mutex_t`) | Protects the `stopped` flag (always read via `is_stopped`, written in `exit_simulation`) |
+| `table_mutex` (`pthread_mutex_t`) | Protects the shared dongle state (`available`, `available_at`, the waiting heaps), the arrival ticket counter, and each coder's `last_compile_ms` and `compile_count` |
 | `table_cond` (`pthread_cond_t`) | Wakes coders waiting for dongles when a dongle is released or the simulation stops |
 | per-coder `cond`, per-dongle `mutex` | Initialised in `setup`; used by `wake_all_coders` to wake any thread waiting on them during shutdown |
 
@@ -137,14 +137,18 @@ Every message goes through `log_state`, which holds `log_mutex` around a single 
 
 All dongle state is protected by a single `table_mutex` instead of locking each dongle separately. A coder needs two dongles at once, and locking them one after another would reintroduce hold-and-wait and lock-ordering problems. With one lock, checking both dongles and taking both is a single atomic step.
 
+### Lock order
+
+The locks are always taken in the order `table_mutex` → `log_mutex` → `stop_mutex`, and never the other way round. `exit_simulation` takes `log_mutex` then `stop_mutex`, releases both, and only then takes `table_mutex` alone to broadcast. Because `stop_mutex` and `table_mutex` are never held together in opposite orders, the monitor and a waiting coder cannot deadlock each other at shutdown.
+
 ### How race conditions are prevented
 
 - **Dongle duplication:** a dongle can only be marked as taken inside `table_mutex`, after checking that it is `available`, past its cooldown, and that the coder is at the head of its heap. Two coders can never take the same dongle.
 - **Atomic acquisition of both dongles:** the readiness check for both dongles and the update of both `available` flags happen under the same lock, so a coder never ends up with only one.
 - **Heap consistency:** pushes and removals happen only while holding `table_mutex`.
-- **Coder ↔ monitor communication:** the monitor never modifies dongle state. It only sets the stop flag (under `stop_mutex` and `table_mutex`) and wakes sleepers. Coders read the flag through `is_stopped()`, which takes `stop_mutex`, and are woken via `table_cond` and their own condition variables so they never stay blocked after the simulation ends.
+- **Coder ↔ monitor communication:** the monitor never modifies dongle state. It reads `compile_count` and `last_compile_ms` under `table_mutex` (where the coders write them), and only sets the stop flag (under `log_mutex` and `stop_mutex`) and wakes sleepers. Coders read the flag through `is_stopped()`, which takes `stop_mutex`, and are woken via `table_cond` and their own condition variables so they never stay blocked after the simulation ends.
 - **Spurious wakeups:** every wait is inside a `while` loop that re-checks the full predicate (`!is_stopped && !dongles_ready`) after each wakeup.
-- **Lost wakeups:** the predicate is checked while holding `table_mutex`, and releases and stops broadcast while holding it, so a wakeup cannot slip in between the check and the wait.
+- **Lost wakeups:** the predicate is checked while holding `table_mutex`, and releases and stops broadcast while holding it. The stop flag is set before that broadcast, so a coder that already checked the flag is inside `pthread_cond_wait` when the broadcast arrives.
 
 ## Resources
 
@@ -163,5 +167,5 @@ AI was used for the following tasks:
 - **README:** drafting and updating this README.
 - **Brainstorming:** discussing the overall design (deadlock prevention, scheduling, how to structure the waiting queues).
 - **Research:** looking up and understanding concepts such as Coffman's conditions, condition variables, `pthread_cond_timedwait`, EDF scheduling and binary heaps.
-- **testing:** ai was used to test the code
-- **to find errors and ideas to fix them :**
+- **Testing:** suggesting test scenarios (single coder, burnout cases, many coders, both schedulers), and how to run them under ThreadSanitizer, AddressSanitizer and Valgrind.
+- **Code review:** pointing out concurrency problems (a lock-order inversion between `stop_mutex` and `table_mutex`, unlocked reads of shared variables, messages printed after the burnout line, and the FIFO key) and suggesting fixes, which I then reviewed, tested and can explain.

@@ -3,19 +3,22 @@
 /*                                                        ::::::::            */
 /*   dongle_helper.c                                    :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/10/08 17:13:35 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/08 17:13:51 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/11/23 23:32:54 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "codexion.h" 
+#include "codexion.h"
 
-long	waiter_key(t_coder *coder)
+// called under table_mutex, so next_ticket needs no extra lock
+// fifo: the ticket is the real arrival order of the request
+// (for the LIFO recode: return (-(coder->sim->next_ticket++));)
+static long	waiter_key(t_coder *coder)
 {
 	if (coder->sim->params.scheduler == 0)
-		return (coder->last_compile_ms);
+		return (coder->sim->next_ticket++);
 	return (coder->last_compile_ms + coder->sim->params.time_to_burnout);
 }
 

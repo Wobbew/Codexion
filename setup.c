@@ -3,10 +3,10 @@
 /*                                                        ::::::::            */
 /*   setup.c                                            :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:27:44 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/07 18:52:02 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/11/23 23:34:04 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,18 +20,21 @@ void	ms_to_ts(long ms, struct timespec *ts)
 	ts->tv_nsec = (ms % 1000) * 1000000L;
 }
 
-// make the simulation ready for execution
-// mallocs all things
-// and initializing mutexes and conditions
+// the only step that can fail (malloc)
+// all waiting heaps share one pool: 2 slots per dongle
 bool	setup_sim(t_sim *sim)
 {
-	sim->coders = malloc(sizeof(t_coder) * sim->params.num_coders);
-	if (!sim->coders)
-		return (false);
-	sim->dongles = malloc(sizeof(t_dongle) * sim->params.num_coders);
-	if (!sim->dongles)
+	int	n;
+
+	n = sim->params.num_coders;
+	sim->coders = malloc(sizeof(t_coder) * n);
+	sim->dongles = malloc(sizeof(t_dongle) * n);
+	sim->waiter_pool = malloc(sizeof(t_waiter) * 2 * n);
+	if (!sim->coders || !sim->dongles || !sim->waiter_pool)
 	{
 		free(sim->coders);
+		free(sim->dongles);
+		free(sim->waiter_pool);
 		return (false);
 	}
 	sim->start_ms = get_time_ms();
@@ -41,10 +44,13 @@ bool	setup_sim(t_sim *sim)
 	pthread_cond_init(&sim->table_cond, NULL);
 	sim->stopped = false;
 	sim->monitor_started = false;
+	sim->next_ticket = 0;
+	sim->started = 0;
 	return (true);
 }
 
-bool	setup_coders(t_sim *sim)
+// threads are created later, in main.c, once everything is initialised
+void	setup_coders(t_sim *sim)
 {
 	int	i;
 
@@ -59,15 +65,11 @@ bool	setup_coders(t_sim *sim)
 			% sim->params.num_coders];
 		sim->coders[i].sim = sim;
 		pthread_cond_init(&sim->coders[i].cond, NULL);
-		if (pthread_create(&sim->coders[i].thread, NULL, coder_routine,
-				&sim->coders[i]) != 0)
-			return (false);
 		i++;
 	}
-	return (true);
 }
 
-bool	setup_dongles(t_sim *sim)
+void	setup_dongles(t_sim *sim)
 {
 	int	i;
 
@@ -77,14 +79,11 @@ bool	setup_dongles(t_sim *sim)
 		sim->dongles[i].id = i + 1;
 		sim->dongles[i].available = true;
 		sim->dongles[i].available_at = 0;
-		sim->dongles[i].waiters = malloc(sizeof(t_waiter) * 2);
-		if (!sim->dongles[i].waiters)
-			return (false);
+		sim->dongles[i].waiters = &sim->waiter_pool[2 * i];
 		sim->dongles[i].waiter_count = 0;
 		pthread_mutex_init(&sim->dongles[i].mutex, NULL);
 		i++;
 	}
-	return (true);
 }
 
 // make everything ready for execution
@@ -92,9 +91,7 @@ bool	setup(t_sim *sim)
 {
 	if (setup_sim(sim) != true)
 		return (false);
-	if (setup_dongles(sim) != true)
-		return (false);
-	if (setup_coders(sim) != true)
-		return (false);
+	setup_dongles(sim);
+	setup_coders(sim);
 	return (true);
 }

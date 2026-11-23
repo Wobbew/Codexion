@@ -3,17 +3,17 @@
 /*                                                        ::::::::            */
 /*   dongle.c                                           :+:    :+:            */
 /*                                                     +:+                    */
-/*   By: wwiedijk <wwiedijk@student.42.fr>            +#+                     */
+/*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/08/31 13:23:21 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/10/08 17:12:51 by wwiedijk      ########   odam.nl         */
+/*   Updated: 2026/11/23 23:31:53 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
 // look if we know how long to wait
-// if we do, wait for that long whit pthread_cond_timedwait
+// if we do, wait for that long with pthread_cond_timedwait
 void	table_wait(t_sim *sim, t_dongle *first, t_dongle *second, long now)
 {
 	struct timespec	ts;
@@ -35,7 +35,7 @@ void	table_wait(t_sim *sim, t_dongle *first, t_dongle *second, long now)
 }
 
 // to avoid circular wait
-// make that the last coder requests the dongles in opisid order
+// make that the last coder requests the dongles in opposite order
 static void	select_dongles(t_coder *coder, t_dongle **first, t_dongle **second)
 {
 	if (coder->id == coder->sim->params.num_coders)
@@ -59,7 +59,7 @@ static int	handle_same_dongle(t_coder *coder, t_dongle *dongle)
 	pthread_mutex_lock(&sim->table_mutex);
 	dongle->available = false;
 	log_state(sim, coder->id, "has taken a dongle");
-	while (!sim->stopped)
+	while (!is_stopped(sim))
 		pthread_cond_wait(&sim->table_cond, &sim->table_mutex);
 	pthread_mutex_unlock(&sim->table_mutex);
 	return (-1);
@@ -74,6 +74,8 @@ bool	dongles_ready(t_dongle *first, t_dongle *second, t_coder *coder)
 			coder));
 }
 
+// last_compile_ms is set in the same critical section that takes the
+// dongles, so the monitor never sees a stale value
 int	take_dongle(t_coder *coder)
 {
 	t_dongle	*first;
@@ -92,6 +94,7 @@ int	take_dongle(t_coder *coder)
 	}
 	first->available = false;
 	second->available = false;
+	coder->last_compile_ms = get_time_ms();
 	pthread_mutex_unlock(&sim->table_mutex);
 	log_state(sim, coder->id, "has taken a dongle");
 	log_state(sim, coder->id, "has taken a dongle");

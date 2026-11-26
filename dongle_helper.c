@@ -6,15 +6,12 @@
 /*   By: wobbe <wobbe@student.42.fr>                  +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2026/10/08 17:13:35 by wwiedijk      #+#    #+#                 */
-/*   Updated: 2026/11/23 23:32:54 by wobbe         ########   odam.nl         */
+/*   Updated: 2026/11/26 14:44:03 by wobbe         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
-// called under table_mutex, so next_ticket needs no extra lock
 // fifo: the ticket is the real arrival order of the request
-// (for the LIFO recode: return (-(coder->sim->next_ticket++));)
 static long	waiter_key(t_coder *coder)
 {
 	if (coder->sim->params.scheduler == 0)
